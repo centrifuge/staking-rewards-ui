@@ -1,6 +1,6 @@
 import Head from 'next/head'
 import { useState } from 'react';
-import { calculateValidator, calculateNominator } from './rewards';
+import { calculateValidator, calculateNominator } from '../src/rewards';
 
 const { ApiPromise, WsProvider } = require('@polkadot/api');
 
