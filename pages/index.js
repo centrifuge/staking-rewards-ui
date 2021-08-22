@@ -1,65 +1,86 @@
 import Head from 'next/head'
+import { useState } from 'react';
+import { calculateValidator, calculateNominator } from './rewards';
+
+const { ApiPromise, WsProvider } = require('@polkadot/api');
+
+function Form() {
+  const [value, setValue] = useState({"asValidator": [0, 0, 0], "asNominator": 0});
+  const [api, setApi] = useState(undefined);
+
+  const calculateRewards = async (event) => {
+    event.preventDefault(); // don't redirect the page
+
+    console.log("Processing: ", event.target.acc.value, event.target.era.value);
+
+    const provider = new WsProvider('wss://fullnode.centrifuge.io');
+
+    if (api === undefined) {
+      console.log("defining!");
+      // Create the API and wait until ready
+      const apix = await ApiPromise.create({ provider });
+      setApi(apix);
+    }
+
+    let result = {};
+    result["asValidator"] = await calculateValidator(api, event.target.acc.value, event.target.era.value);
+    // console.log("Result Nominator", resultNominator);
+    result["asNominator"] = await calculateNominator(api, event.target.acc.value, event.target.era.value);
+
+    setValue(result);
+  };
+
+  return (
+    <div>
+      <form className="description"  onSubmit={calculateRewards}>
+        <label htmlFor="acc">Account</label>
+        {' '}
+        <input id="acc" type="text" autoComplete="acc" required/>
+        {' '}
+        <label htmlFor="era">Era</label>
+        {' '}
+        <input id="era" type="text" autoComplete="era" required/>
+        {' '}
+        <button type="submit">Calculate</button>
+      </form>
+      <div className="result">
+        AsValidator { value["asValidator"][0] }{' '}{ value["asValidator"][1] }{' '}{ value["asValidator"][2] }
+        <br/>
+        AsNominator { value["asNominator"] }
+      </div>
+    </div>
+  )
+}
 
 export default function Home() {
+
+
   return (
     <div className="container">
       <Head>
-        <title>Create Next App</title>
+        <title>Centrifuge Staking Rewards</title>
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
       <main>
         <h1 className="title">
-          Welcome to <a href="https://nextjs.org">Next.js!</a>
+          Check my Centrifuge Staking Rewards!
         </h1>
 
         <p className="description">
-          Get started by editing <code>pages/index.js</code>
+          Input your Centrifuge Account and see your expected rewards per era
         </p>
 
-        <div className="grid">
-          <a href="https://nextjs.org/docs" className="card">
-            <h3>Documentation &rarr;</h3>
-            <p>Find in-depth information about Next.js features and API.</p>
-          </a>
-
-          <a href="https://nextjs.org/learn" className="card">
-            <h3>Learn &rarr;</h3>
-            <p>Learn about Next.js in an interactive course with quizzes!</p>
-          </a>
-
-          <a
-            href="https://github.com/vercel/next.js/tree/master/examples"
-            className="card"
-          >
-            <h3>Examples &rarr;</h3>
-            <p>Discover and deploy boilerplate example Next.js projects.</p>
-          </a>
-
-          <a
-            href="https://vercel.com/import?filter=next.js&utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-            className="card"
-          >
-            <h3>Deploy &rarr;</h3>
-            <p>
-              Instantly deploy your Next.js site to a public URL with Vercel.
-            </p>
-          </a>
-        </div>
+        <Form/>
       </main>
 
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{' '}
-          <img src="/vercel.svg" alt="Vercel" className="logo" />
-        </a>
-      </footer>
-
       <style jsx>{`
+        .result {
+          justify-content: center;
+          align-items: center;
+        }
+        
+        
         .container {
           min-height: 100vh;
           padding: 0 0.5rem;
