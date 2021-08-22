@@ -62,8 +62,8 @@ export async function calculateNominator(api: ApiPromise, account: string, era: 
         let item = nominators.toJSON()["targets"][i];
         const rewardNominators = await calculateRewardForNominators(api, item, era);
         const stakers = await api.query.staking.erasStakers(era, item);
-        var jsonDict = stakers.toJSON().value;
-        const nominatorEntry = jsonDict["others"].find(element => element.who == account);
+        var others = stakers.others;
+        const nominatorEntry = findAccount(others, account);
         const nominatorValue = new BN(Number(nominatorEntry.value)).shiftedBy(-18).toNumber();
         const validatorTotalStake = new BN(Number(stakers.toJSON()["total"])).shiftedBy(-18).toNumber();
         const reward = rewardNominators * (nominatorValue / validatorTotalStake);
@@ -72,4 +72,8 @@ export async function calculateNominator(api: ApiPromise, account: string, era: 
     }
 
     return totalNominator;
+}
+
+function findAccount(stakers, account) {
+    return stakers.find(element => element.who == account)
 }
